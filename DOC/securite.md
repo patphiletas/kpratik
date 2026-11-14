@@ -214,6 +214,19 @@ const html = new TextDecoder().decode(Buffer.concat(chunks))
 - Le nombre d'appels est plafonné à **2 par analyse** (`MAX_TOOL_CALLS`) — limite l'impact d'un modèle qui boucle et protège le quota Groq gratuit (cf. bug #15).
 - Toute erreur (page indisponible, JSON d'arguments malformé) retourne `null` sans jamais faire planter la boucle d'analyse.
 
+### S16 — SSRF par redirection HTTP (implémenté le 2026-11-14)
+
+S7 ne vérifiait que l'URL de départ. `fetch()` suivait ensuite les redirections tout seul : un site public pouvait répondre `302 Location: http://169.254.169.254/…` (metadata cloud) ou `http://localhost/…`, et le serveur allait chercher la cible sans contrôle. `fetch_page` (S15) était exposé de la même façon.
+
+**Mesures appliquées (`safeFetch`, `lib/services/scraper.ts`) :**
+- `redirect: 'manual'` : chaque redirection est suivie à la main, et chaque URL cible repasse par `assertPublicUrl`.
+- 5 redirections maximum, puis erreur `FETCH_FAILED`.
+- `assertPublicUrl` refuse tout protocole autre que `http:` / `https:`.
+- `isPrivateIp` couvre en plus les IPv4 mappées en IPv6 (`::ffff:127.0.0.1`), l'adresse `::` et la plage CGNAT `100.64.0.0/10`.
+- `scrapeWebsite` et `fetchPageText` passent tous deux par `safeFetch`. 8 tests (bloc S16 de `__tests__/services/scraper.test.ts`).
+
+**Limite connue :** la résolution DNS de `assertPublicUrl` et celle de `fetch()` sont distinctes, donc un DNS rebinding reste théoriquement possible. Le fermer demande un agent HTTP qui épingle l'IP résolue. Voir aussi `DOC/bugs.md` #22.
+
 ---
 
 ## Résumé des actions
@@ -230,6 +243,7 @@ const html = new TextDecoder().decode(Buffer.concat(chunks))
 | Moyenne | S10 — Pas de CSP | CSP dans `next.config.ts` | ✅ Fait |
 | Basse | S11 — Audit dépendances | `npm audit` dans CI | ✅ Fait |
 | Haute | S15 — Fetch dirigé par le LLM | Même hostname + `assertPublicUrl` + cap 2 appels + scrubbing | ✅ Fait |
+| Haute | S16 — SSRF par redirection | `safeFetch` : redirections revérifiées, protocoles et plages privées complétés | ✅ Fait (DNS rebinding : limite connue) |
 
 ---
 
