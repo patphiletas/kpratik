@@ -1,6 +1,6 @@
 # Tests — Kpratik
 
-98 tests Vitest répartis sur 11 fichiers. À mettre à jour à chaque nouvelle feature.
+106 tests Vitest répartis sur 11 fichiers. À mettre à jour à chaque nouvelle feature.
 
 > **Note** : les composants React (`analyzer-app.tsx`, cards) ne sont pas couverts par des tests unitaires — le projet n'a pas React Testing Library configuré. Les changements UI sont validés manuellement dans le navigateur.
 

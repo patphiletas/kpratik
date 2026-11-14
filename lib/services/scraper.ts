@@ -8,7 +8,10 @@ const PRIVATE_IP_RE = [
   /^192\.168\./,
   /^169\.254\./,
   /^0\./,
+  /^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./, // CGNAT 100.64.0.0/10
   /^::1$/,
+  /^::$/,
+  /^::ffff:/i, // IPv4 mappée en IPv6 (::ffff:127.0.0.1)
   /^fc/i,
   /^fd/i,
   /^fe80:/i,
@@ -19,7 +22,10 @@ export function isPrivateIp(ip: string): boolean {
 }
 
 async function assertPublicUrl(url: string): Promise<void> {
-  const { hostname } = new URL(url)
+  const { hostname, protocol } = new URL(url)
+  if (protocol !== 'http:' && protocol !== 'https:') {
+    throw new AppError(ErrorType.INVALID_URL, 'URL blocked: unsupported protocol', 400)
+  }
   const host = hostname.replace(/^\[|\]$/g, '')  // normalise [::1] → ::1
   if (/^(localhost|0\.0\.0\.0|::1)$/.test(host)) {
     throw new AppError(ErrorType.INVALID_URL, 'URL blocked: private address', 400)
@@ -33,6 +39,27 @@ async function assertPublicUrl(url: string): Promise<void> {
   if (isPrivateIp(address)) {
     throw new AppError(ErrorType.INVALID_URL, 'URL blocked: private address', 400)
   }
+}
+
+const MAX_REDIRECTS = 5
+
+/**
+ * fetch() qui suit les redirections à la main : chaque saut est revérifié par
+ * assertPublicUrl. Sans ça, un site public pourrait rediriger vers une adresse
+ * interne (169.254.169.254, localhost…) et contourner le garde-fou SSRF.
+ */
+export async function safeFetch(url: string, init: RequestInit = {}): Promise<Response> {
+  let current = url
+  for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+    await assertPublicUrl(current)
+    const response = await fetch(current, { ...init, redirect: 'manual' })
+    const location = response.headers.get('location')
+    if (response.status < 300 || response.status >= 400 || !location) {
+      return response
+    }
+    current = new URL(location, current).href
+  }
+  throw new AppError(ErrorType.FETCH_FAILED, 'Too many redirects', 400)
 }
 
 const MAX_BODY_BYTES = 500_000
@@ -205,12 +232,10 @@ function parseFooterSignals(html: string): FooterSignals {
 
 export async function scrapeWebsite(url: string): Promise<ScrapedData> {
   try {
-    await assertPublicUrl(url)
-
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), 10000)
 
-    const response = await fetch(url, {
+    const response = await safeFetch(url, {
       headers: {
         'User-Agent':
           'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -311,12 +336,10 @@ export async function fetchPageText(
   }
 
   try {
-    await assertPublicUrl(target.href)
-
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), 10000)
 
-    const response = await fetch(target.href, {
+    const response = await safeFetch(target.href, {
       headers: {
         'User-Agent':
           'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',

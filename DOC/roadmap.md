@@ -17,7 +17,7 @@
 - [x] **Signaux footer** — extraction `<footer>` : année de copyright, réseaux sociaux, certifications (SOC 2, ISO 27001…), forme juridique, siège social *(enrichissement)*
 - [x] **UI** — composant `analyzer-app.tsx`, breakdown score, section DNS (violet), stack avec confiance, données publiques *(enrichissement)*
 - [x] **Dossier DOC** — roadmap, sujet, tests, pitch vidéo *(documentation)*
-- [x] **98 tests Vitest** — 11 fichiers couvrant tous les services (errors, validation, middleware, utils, heuristics, scoring, DNS, wiki, scraper, ratelimit, llm) *(qualité)*
+- [x] **106 tests Vitest** — 11 fichiers couvrant tous les services (errors, validation, middleware, utils, heuristics, scoring, DNS, wiki, scraper, ratelimit, llm) *(qualité)*
 - [x] **Analyse IA différée (lazy mode)** — bouton IA auto/lazy dans le formulaire, appel Groq déclenché au clic sur l'onglet uniquement, route dédiée `/api/analyze-llm`, variable `LAZY_LLM` *(optimisation)*
 - [x] **Fallback hostname Wikipedia** — si le companyName ne matche pas l'article Wikipedia, retry avec le nom de domaine sans TLD — correction bug #17 *(qualité)*
 - [x] **CI/CD GitHub Actions** — TypeScript + tests à chaque push/PR sur `main` *(qualité)*

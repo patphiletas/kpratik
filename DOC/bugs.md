@@ -225,3 +225,15 @@ Format : symptôme → cause → solution choisie.
 **Solution :** `npm audit fix` (pas de `--force` nécessaire, fix direct sur `nanoid` en transitif via `postcss`). `npm audit --audit-level=high` → 0 vulnérabilité. Seul `package-lock.json` change (aucune dépendance directe touchée). Vérifié : `tsc --noEmit` et `npm test` (98 tests) passent après la mise à jour.
 
 **Point de vigilance :** deux échecs CI sur `npm audit` en l'espace de quelques commits (#19, #21) — si ça se reproduit souvent, envisager un `Dependabot`/`npm audit` programmé plutôt que de découvrir la panne au push.
+
+---
+
+## Bug #22 — SSRF : contournement du garde-fou par redirection HTTP
+
+**Symptôme :** Aucun visible côté utilisateur — faille repérée en revue de code.
+
+**Cause :** `assertPublicUrl()` ne vérifiait que l'URL saisie. `fetch()` suivait ensuite automatiquement les redirections : un site public pouvait répondre `302 Location: http://169.254.169.254/…` (métadonnées cloud) ou `http://localhost/…` et le serveur allait les chercher. Même chose pour `fetchPageText()`, l'outil exposé à l'agent IA. Les IPv4 mappées en IPv6 (`::ffff:127.0.0.1`), la plage CGNAT `100.64.0.0/10` et les protocoles non HTTP n'étaient pas non plus filtrés.
+
+**Solution :** Nouveau `safeFetch()` (`lib/services/scraper.ts`) : `redirect: 'manual'`, chaque saut est revérifié par `assertPublicUrl()`, 5 redirections maximum. `scrapeWebsite()` et `fetchPageText()` l'utilisent. `isPrivateIp()` couvre les nouvelles plages, `assertPublicUrl()` refuse tout sauf `http:`/`https:`. 8 tests ajoutés (S16) → 106 tests.
+
+**Limite connue :** la résolution DNS de la vérification et celle de `fetch()` sont distinctes (DNS rebinding théoriquement possible). Le corriger demanderait un agent HTTP qui épingle l'IP résolue — hors périmètre pour l'instant.

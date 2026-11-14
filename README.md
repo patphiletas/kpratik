@@ -20,7 +20,7 @@
   <p>
     <img src="https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs&logoColor=white" alt="Next.js 16" />
     <img src="https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white" alt="TypeScript" />
-    <img src="https://img.shields.io/badge/tests-98%20passing-22c55e?logo=vitest&logoColor=white" alt="98 tests" />
+    <img src="https://img.shields.io/badge/tests-106%20passing-22c55e?logo=vitest&logoColor=white" alt="106 tests" />
     <img src="https://img.shields.io/badge/LLM-Groq-F55036?logoColor=white" alt="Groq" />
     <img src="https://img.shields.io/badge/deployed-Vercel-black?logo=vercel&logoColor=white" alt="Vercel" />
   </p>
@@ -82,7 +82,7 @@ Par défaut, l'appel LLM a lieu pendant l'analyse principale. En **mode lazy** (
 - **TypeScript** — typage strict des contrats de données et des services
 - **Tailwind CSS 4** — interface responsive orientée usage commercial
 - **Zod 4** — validation des données échangées avec l'API
-- **Vitest** — 98 tests unitaires couvrant tous les services
+- **Vitest** — 106 tests unitaires couvrant tous les services
 
 ---
 
@@ -118,7 +118,7 @@ lib/
   api-middleware.ts           Format de réponse API unifié
   errors.ts                   Gestion des erreurs applicatives
   ratelimit.ts                Rate limiting Upstash (10 req/60s par IP)
-__tests__/                    98 tests Vitest (11 fichiers)
+__tests__/                    106 tests Vitest (11 fichiers)
 .github/workflows/ci.yml      Intégration continue : audit, typage + tests à chaque push
 ```
 
@@ -160,7 +160,7 @@ Sans ces clés, l'application fonctionne entièrement : heuristiques locales + W
 ## Tests et build
 
 ```bash
-npm test        # 98 tests
+npm test        # 106 tests
 npm run build   # build production
 ```
 

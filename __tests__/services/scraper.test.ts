@@ -112,3 +112,50 @@ describe('fetchPageText', () => {
     expect(result).toBeNull()
   })
 })
+
+// ─── S16 — Redirections revérifiées (contournement SSRF) ─────────────────────
+
+function redirectTo(location: string, status = 302): Response {
+  return new Response(null, { status, headers: { location } })
+}
+
+describe('S16 — SSRF : redirections', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('bloque une redirection vers une adresse privée', async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce(redirectTo('http://169.254.169.254/latest/meta-data'))
+    vi.stubGlobal('fetch', fetchMock)
+    await expect(scrapeWebsite('https://93.184.216.34')).rejects.toMatchObject({ type: 'INVALID_URL' })
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('bloque une redirection vers localhost dans fetchPageText', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(redirectTo('http://localhost/admin')))
+    expect(await fetchPageText('https://93.184.216.34', '/about')).toBeNull()
+  })
+
+  it('suit une redirection publique et désactive la redirection automatique', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(redirectTo('/home', 301))
+      .mockResolvedValueOnce(makeResponse(HTML_MINIMAL))
+    vi.stubGlobal('fetch', fetchMock)
+    const result = await scrapeWebsite('https://93.184.216.34')
+    expect(result.title).toBe('Example')
+    expect(fetchMock).toHaveBeenNthCalledWith(2, 'https://93.184.216.34/home', expect.objectContaining({ redirect: 'manual' }))
+  })
+
+  it('abandonne après trop de redirections', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockImplementation(async () => redirectTo('/loop')))
+    await expect(scrapeWebsite('https://93.184.216.34')).rejects.toMatchObject({ type: 'FETCH_FAILED' })
+  })
+
+  it('bloque les protocoles non HTTP', async () => {
+    await expect(scrapeWebsite('file:///etc/passwd')).rejects.toMatchObject({ type: 'INVALID_URL' })
+  })
+
+  it.each(['::ffff:127.0.0.1', '100.64.0.1', '::'])('isPrivateIp(%s) → true', (ip) => {
+    expect(isPrivateIp(ip)).toBe(true)
+  })
+})
