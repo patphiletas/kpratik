@@ -25,6 +25,7 @@
 - [x] **AGENTS.md / CLAUDE.md réels** — contexte projet, règles, table de routage vers `DOC/` — retour Youno *(documentation)*
 - [x] **Personnalisation ICP en un seul échange** — champ optionnel repliable dans le formulaire, injecté dans le prompt LLM pour prioriser les signaux GTM pertinents, sans boucle de chat (option secondaire retour Youno) *(IA)*
 - [x] **Image de partage (Open Graph)** — `app/opengraph-image.tsx` reprend le bandeau bleu et le bloc « Site à analyser » ; métadonnées passées en français (`description`, `openGraph`) — sans elle, LinkedIn affichait une vignette vide (2026-11-16) *(visibilité)*
+- [x] **Icône d'onglet** — `app/icon.tsx` (« K » en Geist sur le bleu du bandeau) remplace le `favicon.ico` par défaut de Next.js, supprimé (2026-11-16) *(visibilité)*
 
 ---
 
