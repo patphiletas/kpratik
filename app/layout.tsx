@@ -19,7 +19,17 @@ const caveat = Caveat({
 
 export const metadata: Metadata = {
   title: "Kpratik",
-  description: "Website intelligence and SaaS B2B fit scoring for GTM teams",
+  description:
+    "Intelligence commerciale B2B : une URL, et en moins de 5 secondes la stack technique, les signaux commerciaux et un score /100 explicable.",
+  openGraph: {
+    title: "Kpratik — intelligence commerciale B2B",
+    description:
+      "Une URL, et en moins de 5 secondes : stack technique, signaux commerciaux et score /100 explicable.",
+    url: "https://kpratik.vercel.app/",
+    siteName: "Kpratik",
+    locale: "fr_FR",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
